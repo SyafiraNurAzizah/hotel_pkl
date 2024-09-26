@@ -1,0 +1,250 @@
+DATABASE HOTEL
+
+user 
+(registrasi)
+- firstname
+- lastname
+- email
+- password
+- no_telp
+- role
+(login)
+- email
+- password
+
+profil_user
+- user_id		-- foreign key ke user.id
+- alamat
+- tanggal_lahir
+- jenis_kelamin
+
+
+//===== H O T E L S =====//
+
+hotel
+- nama_cabang
+- alamat
+- no_telp
+
+fasilitas_hotel
+- hotel_id 		-- foreign key ke hotel.id - memilih cabang hotel
+- nama_fasilitas
+- deskripsi
+
+kontak_hotel
+- hotel_id 		-- foreign key ke hotel.id - memilih cabang hotel, nanti yang ditampilkan nama hotel + no telp
+- username
+- email
+- isi_pesan
+
+tipe_kamar
+- hotel_id 		-- foreign key ke hotel.id - memilih cabang hotel
+- nama_tipe_kamar
+- fasilitas_kamar
+- stok_kamar
+
+booking_hotel
+- user_id		-- foreign key ke user.id - otomatis sesuai user yang sedang login
+- hotel_id 		-- foreign key ke hotel.id - memilih cabang hotel
+- tipe_kamar_id 	-- foreign key ke tipe_kamar.id - memilih cabang hotel
+- tanggal_booking
+- check_in 		-- mirip fitur yang ada di Traveloka
+- check_out 		-- otomatis mengikuti check-in
+- jumlah_tamu 		-- anak dan dewasa
+- status		-- 'selesai', 'belum selesai', 'sedang diproses'
+- status_pembayaran	-- 'belum_dibayar', 'dibayar' - default 'belum_dibayar'
+
+transaksi_pembayaran
+- booking_hotel_id	-- foreign key ke booking_hotel.id
+- jumlah_total		-- total biaya
+- metode_pembayaran
+- status_pembayaran	-- 'belum_dibayar', 'dibayar' - default 'belum_dibayar'
+- tanggal_pembayaran
+
+//==========//
+
+
+//===== M E E T I N G S =====//
+
+
+
+//==========//
+
+
+//===== W E D D I N G S =====//
+
+
+
+//==========//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Tabel User
+CREATE TABLE user (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstname VARCHAR(100),
+    lastname VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(255),  -- Gunakan hashing untuk menyimpan password
+    no_telp VARCHAR(20),
+    role ENUM('user', 'admin') DEFAULT 'user'  -- Menentukan peran pengguna
+);
+
+-- Tabel Profil User
+CREATE TABLE profil_user (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,                       -- Relasi ke tabel user
+    alamat TEXT,                       -- Alamat pengguna
+    kota VARCHAR(100),                 -- Kota pengguna
+    tanggal_lahir DATE,                -- Tanggal lahir pengguna
+    FOREIGN KEY (user_id) REFERENCES user(id)  -- Relasi dengan tabel user
+);
+
+-- Tabel Hotel
+CREATE TABLE hotel (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_cabang VARCHAR(100),
+    alamat TEXT,
+    no_telp VARCHAR(20)
+);
+
+-- Tabel Fasilitas Hotel
+CREATE TABLE fasilitas_hotel (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    hotel_id INT,  -- Foreign key ke tabel hotel
+    nama_fasilitas VARCHAR(100),
+    deskripsi TEXT,
+    FOREIGN KEY (hotel_id) REFERENCES hotel(id) ON DELETE CASCADE  -- Menghapus fasilitas jika hotel dihapus
+);
+
+-- Tabel Kontak Hotel
+CREATE TABLE kontak_hotel (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    hotel_id INT,  -- Foreign key ke tabel hotel
+    username VARCHAR(100),
+    email VARCHAR(100),
+    isi_pesan TEXT,
+    FOREIGN KEY (hotel_id) REFERENCES hotel(id) ON DELETE CASCADE  -- Menghapus kontak jika hotel dihapus
+);
+
+-- Tabel Tipe Kamar
+CREATE TABLE tipe_kamar (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    hotel_id INT,  -- Foreign key ke tabel hotel
+    nama_tipe_kamar VARCHAR(100),
+    fasilitas_kamar TEXT,  -- Daftar fasilitas di kamar (AC, TV, Wi-Fi, dll)
+    stok_kamar INT,
+    FOREIGN KEY (hotel_id) REFERENCES hotel(id) ON DELETE CASCADE  -- Menghapus tipe kamar jika hotel dihapus
+);
+
+-- Tabel Booking Hotel
+CREATE TABLE booking_hotel (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,  -- Foreign key ke tabel user
+    hotel_id INT,  -- Foreign key ke tabel hotel
+    tipe_kamar_id INT,  -- Foreign key ke tabel tipe_kamar
+    tanggal_booking DATE,
+    check_in DATE,  -- Tanggal check-in
+    check_out DATE,  -- Tanggal check-out (otomatis mengikuti check-in)
+    jumlah_tamu INT,  -- Jumlah tamu (anak dan dewasa)
+    status ENUM('selesai', 'belum selesai', 'sedang diproses'),  -- Status booking
+    status_pembayaran ENUM('belum_dibayar', 'dibayar') DEFAULT 'belum_dibayar',  -- Status pembayaran
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,  -- Menghapus booking jika user dihapus
+    FOREIGN KEY (hotel_id) REFERENCES hotel(id) ON DELETE CASCADE,  -- Menghapus booking jika hotel dihapus
+    FOREIGN KEY (tipe_kamar_id) REFERENCES tipe_kamar(id) ON DELETE CASCADE  -- Menghapus booking jika tipe kamar dihapus
+);
+
+-- Tabel Transaksi Pembayaran
+CREATE TABLE transaksi_pembayaran (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_hotel_id INT,  -- Foreign key ke tabel booking_hotel
+    jumlah_total DECIMAL(10, 2),  -- Total biaya (termasuk denda jika ada)
+    metode_pembayaran VARCHAR(100),  -- Metode pembayaran (misalnya: Transfer, Kartu Kredit)
+    status_pembayaran ENUM('belum_dibayar', 'dibayar') DEFAULT 'belum_dibayar',  -- Status pembayaran
+    tanggal_pembayaran DATETIME,
+    jumlah_denda DECIMAL(10, 2) DEFAULT 0,  -- Kolom untuk menyimpan denda jika ada
+    FOREIGN KEY (booking_hotel_id) REFERENCES booking_hotel(id) ON DELETE CASCADE  -- Menghapus transaksi jika booking dihapus
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TRIGGER status_pembayaran
+
+//----- insert -----//
+
+DELIMITER //
+
+CREATE TRIGGER after_insert_transaksi_pembayaran
+AFTER INSERT ON transaksi_pembayaran
+FOR EACH ROW
+BEGIN
+    UPDATE booking_hotel
+    SET status_pembayaran = NEW.status_pembayaran
+    WHERE id = NEW.booking_hotel_id;
+END;
+
+//
+
+DELIMITER ;
+
+//----------//
+
+//----- update -----//
+
+DELIMITER //
+
+CREATE TRIGGER after_update_transaksi_pembayaran
+AFTER UPDATE ON transaksi_pembayaran
+FOR EACH ROW
+BEGIN
+    IF OLD.status_pembayaran <> NEW.status_pembayaran THEN
+        UPDATE booking_hotel
+        SET status_pembayaran = NEW.status_pembayaran
+        WHERE id = NEW.booking_hotel_id;
+    END IF;
+END;
+
+//
+
+DELIMITER ;
+
+//----------//
